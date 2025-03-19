@@ -43,4 +43,15 @@ mvn exec:java -Dexec.mainClass="com.lxpeak.mydb.client.Launcher"
 
 一个执行示例：
 
+```shell
+# 建学生表，索引为id和name
+create table students id int32, name string, age int32 (index id name)
+    
+# 插入数据
+insert into students values 1 "ZhangSan" 18
+
+# 查询数据
+select * from students where id = 1
+```
+
 
