@@ -22,7 +22,7 @@ import com.lxpeak.mydb.common.Error;
 // 第九章
 public class Field {
     long uid;
-    private Table tb; //
+    private Table tb;
     String fieldName;
     String fieldType;
     private long index; //字段的索引标识符（如果字段有索引）
@@ -31,6 +31,7 @@ public class Field {
     public static Field loadField(Table tb, long uid) {
         byte[] raw = null;
         try {
+            // 根据事务id(xid)和索引节点id(uid)得到真正数据的字节数组
             raw = ((TableManagerImpl)tb.tbm).vm.read(TransactionManagerImpl.SUPER_XID, uid);
         } catch (Exception e) {
             Panic.panic(e);
@@ -53,15 +54,22 @@ public class Field {
 
     private Field parseSelf(byte[] raw) {
         int position = 0;
+        // 截取raw中的第一个字符串数据作为字段名
         ParseStringRes res = Parser.parseString(raw);
         fieldName = res.str;
+        // 移动偏移量
         position += res.next;
+        // (1) Arrays.copyOfRange(raw, position, raw.length)得到字段名后面的字节数组
+        // (2) parseString会截取第一个字符串数据,现在得到的是"字段类型"字符串
         res = Parser.parseString(Arrays.copyOfRange(raw, position, raw.length));
         fieldType = res.str;
+        // 移动偏移量
         position += res.next;
+        // 如果这个字段没有索引则为 0。
         this.index = Parser.parseLong(Arrays.copyOfRange(raw, position, position+8));
         if(index != 0) {
             try {
+                // todo 待补充
                 bt = BPlusTree.load(index, ((TableManagerImpl)tb.tbm).dm);
             } catch(Exception e) {
                 Panic.panic(e);
