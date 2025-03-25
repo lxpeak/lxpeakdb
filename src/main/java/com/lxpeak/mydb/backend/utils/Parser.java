@@ -45,9 +45,16 @@ public class Parser {
     }
 
     public static ParseStringRes parseString(byte[] raw) {
+        // string2Byte方法里开头四个字节保存的是字符串以字节数组存储的长度，所以这里取四个字节作为长度进行解析
         int length = parseInt(Arrays.copyOf(raw, 4));
+        // 因为开头四个字节保存的是长度，所以字符串在字符数组中的实际数据是[4, 4+length)
         String str = new String(Arrays.copyOfRange(raw, 4, 4+length));
-        // todo 为什么这里也要length+4
+        // Q： 为什么这里也要length+4
+        // A： （1）因为length+4是这个字符串在raw这个字节数组中占的总空间大小，
+        //         即用“前四个字节”保存字符串实际内容长度，再通过[4, 4+length)得到实际的字符串内容。
+        //         所以这个字符串实际占据了4+length的字节数组空间,如果想读取下一个数据的话,就要跳过(4+length)个字节
+        //     (2) 要注意的是,不能用raw.length来代表这个字符串占据的字节数组长度,因为raw保存的不单是这一个字符串,还有其他数据.
+        //         这个字符串是通过"复制raw中的某一段字节数组"的方式获得的,也就是Arrays.copyOfRange这种方法.
         return new ParseStringRes(str, length+4);
     }
 

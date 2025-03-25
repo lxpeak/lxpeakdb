@@ -60,14 +60,18 @@ public class Entry {
 
     // 以拷贝的形式返回内容
     public byte[] data() {
-        //todo 这里的锁是唯一的吗，如果多个线程调用这个锁也会锁住吗
+        // Q：这里锁住是为什么？
+        // A：担心读数据时候有写入操作，所以用了读锁。
         dataItem.rLock();
         try {
-            //todo 这个是个单例的吗，上面用到了dataItem的读锁，这里用了.data()说明这个dataItem里的data之前可能有更新操作，
-            //     所以才会在下面用到sa.end - sa.start - OF_DATA来确定新data数组的大小
             SubArray sa = dataItem.data();
-            // todo 为什么要这么计算？
+            // Q: 为什么要这么计算？
+            // A: (1)首先这一行是开辟了容量为(sa.end - sa.start - OF_DATA)的字节数组，下一行的System.arraycopy才是赋值操作；
+            //    (2)其次，通过追踪 SubArray sa = dataItem.data(); 这行代码可以得知：sa的begin是(raw.start+OF_DATA)，end是raw.end，
+            //    如果想得到raw（也就是目前代码里的data，也就是实际存储的二进制文件），那么就需要开辟相应的内存空间，也就是后项减前项，
+            //    (End-Begin) => raw.end - (raw.start+OF_DATA) => raw.end - raw.start - OF_DATA
             byte[] data = new byte[sa.end - sa.start - OF_DATA];
+            // 上文得到了空的字节数组，下面代码对空数组进行赋值，然后返回这个字节数组
             System.arraycopy(sa.raw, sa.start+OF_DATA, data, 0, data.length);
             return data;
         } finally {

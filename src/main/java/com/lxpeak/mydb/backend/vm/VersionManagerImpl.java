@@ -31,7 +31,8 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         this.lt = new LockTable();
     }
 
-    //read() 方法读取一个 entry，注意判断下可见性即可。
+    // read() 方法读取一个 entry，注意判断下可见性即可。
+    // 读取真正的数据，以字节数组形式返回
     @Override
     public byte[] read(long xid, long uid) throws Exception {
         lock.lock();
@@ -54,6 +55,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         }
         try {
             if(Visibility.isVisible(tm, t, entry)) {
+                // 获得保存真正数据的字节数组
                 return entry.data();
             } else {
                 return null;
