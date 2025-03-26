@@ -10,6 +10,12 @@ import com.lxpeak.mydb.backend.parser.statement.Insert;
 import com.lxpeak.mydb.backend.parser.statement.Select;
 import com.lxpeak.mydb.backend.parser.statement.Update;
 
+/*
+* 由于 TableManager 已经是直接被最外层 Server 调用（MYDB 是 C/S 结构），
+* 这些方法直接返回执行的结果，例如错误信息或者结果信息的字节数组（可读）。
+*
+* 在创建新表时，采用的时头插法，所以每次创建表都需要更新 Booter 文件
+* */
 public interface TableManager {
     BeginRes begin(Begin begin);
     byte[] commit(long xid) throws Exception;

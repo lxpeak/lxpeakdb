@@ -16,6 +16,7 @@ import com.lxpeak.mydb.backend.dm.pageIndex.PageIndex;
 import com.lxpeak.mydb.backend.tm.TransactionManager;
 
 //第五章
+// todo 待补充
 public class DataManagerImpl extends AbstractCache<DataItem> implements DataManager {
 
     TransactionManager tm;
@@ -157,5 +158,5 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
             pg.release();
         }
     }
-    
+
 }

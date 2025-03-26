@@ -10,7 +10,7 @@ import java.nio.channels.FileChannel;
 import com.lxpeak.mydb.backend.utils.Panic;
 import com.lxpeak.mydb.common.Error;
 import com.lxpeak.mydb.backend.utils.Parser;
-
+// todo 待补充
 public interface Logger {
     void log(byte[] data);
     void truncate(long x) throws Exception;

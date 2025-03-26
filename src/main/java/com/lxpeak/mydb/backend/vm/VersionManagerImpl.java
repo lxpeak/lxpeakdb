@@ -66,6 +66,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
     }
 
     //insert() 则是将数据包裹成 Entry，无脑交给 DM 插入即可。
+    // 返回uid
     @Override
     public long insert(long xid, byte[] data) throws Exception {
         lock.lock();
@@ -228,5 +229,5 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
     protected void releaseForCache(Entry entry) {
         entry.remove();
     }
-    
+
 }

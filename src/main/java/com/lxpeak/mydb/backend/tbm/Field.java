@@ -78,9 +78,14 @@ public class Field {
         return this;
     }
 
+    /*
+    * indexed：是否需要索引
+    * */
     public static Field createField(Table tb, long xid, String fieldName, String fieldType, boolean indexed) throws Exception {
+        // 检查字段类型合法性
         typeCheck(fieldType);
         Field f = new Field(tb, fieldName, fieldType, 0);
+        // 若需要索引则生成新的B+树
         if(indexed) {
             long index = BPlusTree.create(((TableManagerImpl)tb.tbm).dm);
             BPlusTree bt = BPlusTree.load(index, ((TableManagerImpl)tb.tbm).dm);
@@ -93,9 +98,11 @@ public class Field {
 
     // 将字段数据持久化到数据库
     private void persistSelf(long xid) throws Exception {
+        // 由于需要使用对象变量，所以需要先保证当前的Field对象是赋值后的
         byte[] nameRaw = Parser.string2Byte(fieldName);
         byte[] typeRaw = Parser.string2Byte(fieldType);
         byte[] indexRaw = Parser.long2Byte(index);
+        // 将字段名、类型和索引UID拼接为字节数组，得到uid
         this.uid = ((TableManagerImpl)tb.tbm).vm.insert(xid, Bytes.concat(nameRaw, typeRaw, indexRaw));
     }
 

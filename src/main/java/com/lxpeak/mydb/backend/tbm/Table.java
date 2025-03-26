@@ -23,9 +23,15 @@ import com.lxpeak.mydb.backend.utils.Parser;
 
 /**
  * Table 维护了表结构
- * 二进制结构如下：
+ * 一个数据库中存在多张表，TBM 使用链表的形式将其组织起来，每一张表都保存一个指向下一张表的 UID。表的二进制结构如下：
  * [TableName][NextTable]
  * [Field1Uid][Field2Uid]...[FieldNUid]
+ *
+ * ----------------------------------------------------
+ * 对表和字段的操作，有一个很重要的步骤，就是计算 Where 条件的范围，目前 MYDB 的 Where 只支持两个条件的与和或。
+ * 例如有条件的 Delete，计算 Where，最终就需要获取到条件范围内所有的 UID。MYDB 只支持已索引字段作为 Where 的条件。
+ * 计算 Where 的范围，具体可以查看 Table 的 parseWhere() 和 calWhere() 方法，以及 Field 类的 calExp() 方法。
+ *
  */
 // 第九章
 public class Table {
@@ -139,7 +145,7 @@ public class Table {
             entry.put(fd.fieldName, value);
             raw = entry2Raw(entry);
             long uuid = ((TableManagerImpl)tbm).vm.insert(xid, raw);
-            
+
             count ++;
 
             for (Field field : fields) {

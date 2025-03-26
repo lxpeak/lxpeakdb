@@ -18,6 +18,16 @@ import com.lxpeak.mydb.backend.parser.statement.Insert;
 import com.lxpeak.mydb.backend.parser.statement.Update;
 import com.lxpeak.mydb.backend.utils.Parser;
 
+/*
+* 由于 TBM 的表管理，使用的是链表串起的 Table 结构，所以就必须保存一个链表的头节点，
+* 即第一个表的 UID，这样在 MYDB 启动时，才能快速找到表信息。
+*
+* MYDB 使用 Booter 类和 bt 文件，来管理 MYDB 的启动信息，虽然现在所需的启动信息，只有一个：头表的 UID。
+* Booter 类对外提供了两个方法：load 和 update，并保证了其原子性。
+* update 在修改 bt 文件内容时，没有直接对 bt 文件进行修改，而是首先将内容写入一个 bt_tmp 文件中，随后将这个文件重命名为 bt 文件。
+* 以期通过操作系统重命名文件的原子性，来保证操作的原子性。
+*
+* */
 //第九章
 public class TableManagerImpl implements TableManager {
     VersionManager vm;
@@ -26,7 +36,7 @@ public class TableManagerImpl implements TableManager {
     private Map<String, Table> tableCache;
     private Map<Long, List<Table>> xidTableCache;
     private Lock lock;
-    
+
     TableManagerImpl(VersionManager vm, DataManager dm, Booter booter) {
         this.vm = vm;
         this.dm = dm;
@@ -146,6 +156,7 @@ public class TableManagerImpl implements TableManager {
         return ("update " + count).getBytes();
     }
     @Override
+    //todo 别人问“为什么TBM的delete记录的时候，不需要删除索引呢”
     public byte[] delete(long xid, Delete delete) throws Exception {
         lock.lock();
         Table table = tableCache.get(delete.tableName);
