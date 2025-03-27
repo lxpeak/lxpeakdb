@@ -14,6 +14,7 @@ import com.lxpeak.mydb.backend.parser.statement.Show;
 import com.lxpeak.mydb.backend.parser.statement.Update;
 import com.lxpeak.mydb.backend.tbm.TableManager;
 
+// 不是线程池父类
 public class Executor {
     private long xid;
     TableManager tbm;
@@ -32,6 +33,8 @@ public class Executor {
 
     public byte[] execute(byte[] sql) throws Exception {
         System.out.println("Execute: " + new String(sql));
+        // 根据Parse()方法得到sql语句对应的结构化信息对象（Begin、Commit、Abort、Show、Create、Select、Insert、Delete、Update），
+        // 然后根据对象的类型调用 TBM 的不同方法进行处理。
         Object stat = Parser.Parse(sql);
         if(Begin.class.isInstance(stat)) {
             if(xid != 0) {

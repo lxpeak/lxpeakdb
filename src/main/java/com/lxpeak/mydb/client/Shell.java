@@ -19,7 +19,9 @@ public class Shell {
                     break;
                 }
                 try {
+                    // 处理输入的sql语句
                     byte[] res = client.execute(statStr.getBytes());
+                    // 输出处理结果
                     System.out.println(new String(res));
                 } catch(Exception e) {
                     System.out.println(e.getMessage());

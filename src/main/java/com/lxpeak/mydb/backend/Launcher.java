@@ -35,10 +35,12 @@ public class Launcher {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options,args);
 
+        // 创建数据库
         if(cmd.hasOption("create")) {
             createDB(cmd.getOptionValue("create"));
             return;
         }
+        // 启动已有的数据库
         if(cmd.hasOption("open")) {
             openDB(cmd.getOptionValue("open"), parseMem(cmd.getOptionValue("mem")));
             return;

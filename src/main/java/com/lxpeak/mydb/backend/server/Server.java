@@ -35,6 +35,7 @@ public class Server {
         ThreadPoolExecutor tpe = new ThreadPoolExecutor(10, 20, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100), new ThreadPoolExecutor.CallerRunsPolicy());
         try {
             while(true) {
+                // 接收一个socket然后用线程池处理
                 Socket socket = ss.accept();
                 Runnable worker = new HandleSocket(socket, tbm);
                 tpe.execute(worker);
@@ -76,6 +77,7 @@ class HandleSocket implements Runnable {
             }
             return;
         }
+        // 这是自己写的处理输入的类，不是线程池的父类
         Executor exe = new Executor(tbm);
         while(true) {
             Package pkg = null;

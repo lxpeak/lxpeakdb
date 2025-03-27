@@ -10,6 +10,7 @@ public class RoundTripper {
         this.packager = packager;
     }
 
+    // RoundTripper 类实际上实现了单次收发动作
     public Package roundTrip(Package pkg) throws Exception {
         packager.send(pkg);
         return packager.receive();
