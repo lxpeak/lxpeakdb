@@ -9,10 +9,9 @@ import com.lxpeak.mydb.common.Error;
 
 /**
  * AbstractCache 实现了一个引用计数策略的缓存
+ *
+ * 这里用的缓存就是一个用来保存数据库的临时信息的数据结构，为了能控制这个缓存的大小，所以设定了最大缓存数，由于有最大缓存数所以需要有淘汰策略。
  */
-/*
-* 我的理解是这里用的缓存就是一个用来保存数据库的临时信息的数据结构，为了能控制这个缓存的大小，所以设定了最大缓存数，由于有最大缓存数所以需要有淘汰策略。
-* */
 //第三章
 public abstract class AbstractCache<T> {
     private HashMap<Long, T> cache;                     // 实际缓存的数据

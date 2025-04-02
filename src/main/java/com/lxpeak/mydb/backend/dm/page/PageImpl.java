@@ -6,8 +6,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.lxpeak.mydb.backend.dm.pageCache.PageCache;
 
 public class PageImpl implements Page {
+    // 页号从1开始
     private int pageNumber;
     private byte[] data;
+    // 脏页面指内存中被修改但还没有刷回本地的页面
     private boolean dirty;
     private Lock lock;
     

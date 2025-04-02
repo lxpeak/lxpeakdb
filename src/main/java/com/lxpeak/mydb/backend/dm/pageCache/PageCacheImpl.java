@@ -55,7 +55,9 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     }
 
     /**
-     * 根据pageNumber从数据库文件中读取页数据，并包裹成Page
+     * 根据pageNumber从数据库文件中读取页数据，并包裹成Page。
+     *
+     * 这里的“数据库文件”指的是fc中保存的xxx.db文件，是从PageCache中的create()和open()方法中传过来的RandomAccessFile参数。
      */
     @Override
     protected Page getForCache(long key) throws Exception {

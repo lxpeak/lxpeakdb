@@ -22,6 +22,7 @@ public interface PageCache {
     int getPageNumber();
     void flushPage(Page pg);
 
+    // 与创建XID文件类似
     public static PageCacheImpl create(String path, long memory) {
         File f = new File(path+PageCacheImpl.DB_SUFFIX);
         try {
