@@ -27,7 +27,7 @@ public class TransactionManagerImpl implements TransactionManager {
     public static final long SUPER_XID = 0;
 
     static final String XID_SUFFIX = ".xid";
-    
+
     private RandomAccessFile file;
     private FileChannel fc;
     private long xidCounter;
@@ -77,6 +77,7 @@ public class TransactionManagerImpl implements TransactionManager {
     // 更新xid事务的状态为status
     private void updateXID(long xid, byte status) {
         long offset = getXidPosition(xid);
+        // 这里的tmp好像也用不到字节数组，毕竟字节数组大小是1，只能处理tmp[0]而已，也就是使用一个字节来记录事务状态
         byte[] tmp = new byte[XID_FIELD_SIZE];
         tmp[0] = status;
         ByteBuffer buf = ByteBuffer.wrap(tmp);
@@ -87,8 +88,9 @@ public class TransactionManagerImpl implements TransactionManager {
             Panic.panic(e);
         }
         try {
-            //注意，这里的所有文件操作，在执行后都需要立刻刷入文件中，防止在崩溃后文件丢失数据，fileChannel 的 force() 方法，
-            // 强制同步缓存内容到文件中，类似于 BIO 中的 flush() 方法。force 方法的参数是一个布尔，表示是否同步文件的元数据（例如最后修改时间等）。
+            // 注意，这里的所有文件操作，在执行后都需要立刻刷入文件中，防止在崩溃后文件丢失数据，
+            // fileChannel的force()方法强制同步缓存内容到文件中，类似于BIO中的flush()方法。
+            // force方法的参数是一个布尔，表示是否同步文件的元数据（例如最后修改时间等）。
             fc.force(false);
         } catch (IOException e) {
             Panic.panic(e);
@@ -100,6 +102,7 @@ public class TransactionManagerImpl implements TransactionManager {
         xidCounter ++;
         ByteBuffer buf = ByteBuffer.wrap(Parser.long2Byte(xidCounter));
         try {
+            // 注意FileChannel的write()方法是覆盖的，如果需要追加(append)则需要手动设置position。
             fc.position(0);
             fc.write(buf);
         } catch (IOException e) {
