@@ -10,7 +10,8 @@ import com.lxpeak.mydb.backend.utils.Panic;
 import com.lxpeak.mydb.common.Error;
 
 public interface PageCache {
-    
+
+    // 一个page大小是8KB。2^13 (Byte) = 2^3 * 2^10 = 8K (Byte)
     public static final int PAGE_SIZE = 1 << 13;
 
     int newPage(byte[] initData);

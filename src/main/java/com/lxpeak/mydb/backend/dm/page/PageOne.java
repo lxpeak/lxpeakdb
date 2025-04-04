@@ -28,7 +28,8 @@ public class PageOne {
     }
 
     private static void setVcOpen(byte[] raw) {
-        // todo 为什么open的时候要复制数组
+        // Q：为什么open的时候要复制数组
+        // A：随机生成8个字节，然后使用arraycopy()方法将生成的这8个字节复制到源数据的第100-107字节处，作为校验码。
         System.arraycopy(RandomUtil.randomBytes(LEN_VC), 0, raw, OF_VC, LEN_VC);
     }
 
