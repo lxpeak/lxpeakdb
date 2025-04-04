@@ -56,7 +56,7 @@ public class Launcher {
         DataManager dm = DataManager.create(path, DEFALUT_MEM, tm);
         VersionManager vm = new VersionManagerImpl(tm, dm);
         TableManager.create(path, vm, dm);
-        //todo 感觉这里的close语句应该放进create里，或者封装到新的方法里，看起来不美观
+        // 感觉这里的close语句应该放进create里，或者封装到新的方法里，看起来不美观
         tm.close();
         dm.close();
     }

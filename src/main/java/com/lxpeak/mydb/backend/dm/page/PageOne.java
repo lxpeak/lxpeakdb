@@ -16,7 +16,7 @@ public class PageOne {
     private static final int OF_VC = 100;
     private static final int LEN_VC = 8;
 
-    public static byte[] InitRaw() {
+    public static byte[] initRaw() {
         byte[] raw = new byte[PageCache.PAGE_SIZE];
         setVcOpen(raw);
         return raw;

@@ -96,12 +96,15 @@ public class LoggerImpl implements Logger {
             Panic.panic(Error.BadLogFileException);
         }
 
+        // 截断文件到正常日志的末尾
         try {
+            // 这里的position是由while循环中的internNext()计算得出的
             truncate(position);
         } catch (Exception e) {
             Panic.panic(e);
         }
         try {
+            // 设置文件指针的位置，使得接下来的读写操作从该位置开始
             file.seek(position);
         } catch (IOException e) {
             Panic.panic(e);
@@ -109,6 +112,7 @@ public class LoggerImpl implements Logger {
         rewind();
     }
 
+    // 计算出一个校验码
     private int calChecksum(int xCheck, byte[] log) {
         for (byte b : log) {
             xCheck = xCheck * SEED + b;
@@ -118,10 +122,12 @@ public class LoggerImpl implements Logger {
 
     @Override
     public void log(byte[] data) {
+        // 得到一个包装好的日志二进制数据
         byte[] log = wrapLog(data);
         ByteBuffer buf = ByteBuffer.wrap(log);
         lock.lock();
         try {
+            // 写入日志文件
             fc.position(fc.size());
             fc.write(buf);
         } catch(IOException e) {
@@ -129,9 +135,11 @@ public class LoggerImpl implements Logger {
         } finally {
             lock.unlock();
         }
+        // 更新总的校验码
         updateXChecksum(log);
     }
 
+    // 更新总的校验码
     private void updateXChecksum(byte[] log) {
         this.xChecksum = calChecksum(this.xChecksum, log);
         try {
@@ -143,6 +151,7 @@ public class LoggerImpl implements Logger {
         }
     }
 
+    // 将日志大小、校验码、数据包装成一个字节数组
     private byte[] wrapLog(byte[] data) {
         byte[] checksum = Parser.int2Byte(calChecksum(0, data));
         byte[] size = Parser.int2Byte(data.length);
@@ -160,21 +169,25 @@ public class LoggerImpl implements Logger {
     }
 
     private byte[] internNext() {
+        // 当前位置+数据 >= 文件大小时
         if(position + OF_DATA >= fileSize) {
             return null;
         }
         ByteBuffer tmp = ByteBuffer.allocate(4);
         try {
+            // 前四个字节是某条日志的大小Size
             fc.position(position);
             fc.read(tmp);
         } catch(IOException e) {
             Panic.panic(e);
         }
         int size = Parser.parseInt(tmp.array());
+        // 检查是否越界
         if(position + size + OF_DATA > fileSize) {
             return null;
         }
 
+        // 某条日志的校验码
         ByteBuffer buf = ByteBuffer.allocate(OF_DATA + size);
         try {
             fc.position(position);

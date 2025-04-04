@@ -10,7 +10,7 @@ import java.nio.channels.FileChannel;
 import com.lxpeak.mydb.backend.utils.Panic;
 import com.lxpeak.mydb.common.Error;
 import com.lxpeak.mydb.backend.utils.Parser;
-// todo 待补充
+
 public interface Logger {
     void log(byte[] data);
     void truncate(long x) throws Exception;
@@ -18,6 +18,7 @@ public interface Logger {
     void rewind();
     void close();
 
+    // 创建log文件，和其他几个文件的创建方法类似
     public static Logger create(String path) {
         File f = new File(path+LoggerImpl.LOG_SUFFIX);
         try {
@@ -52,6 +53,7 @@ public interface Logger {
         return new LoggerImpl(raf, fc, 0);
     }
 
+    // 打开log文件时，在lg.init()方法中会进行校验
     public static Logger open(String path) {
         File f = new File(path+LoggerImpl.LOG_SUFFIX);
         if(!f.exists()) {
