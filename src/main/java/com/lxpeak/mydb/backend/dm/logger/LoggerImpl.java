@@ -177,6 +177,7 @@ public class LoggerImpl implements Logger {
         try {
             // 前四个字节是某条日志的大小Size
             fc.position(position);
+            // 通过fc将文件信息读取到tmp中。（虽然我一直觉得应该叫fc把日志信息写入到tmp这个ByteBuffer中，不过在逻辑上确实是对文件进行读操作）
             fc.read(tmp);
         } catch(IOException e) {
             Panic.panic(e);
@@ -187,7 +188,7 @@ public class LoggerImpl implements Logger {
             return null;
         }
 
-        // 某条日志的校验码
+        // 读取某条日志的校验码
         ByteBuffer buf = ByteBuffer.allocate(OF_DATA + size);
         try {
             fc.position(position);
@@ -197,6 +198,7 @@ public class LoggerImpl implements Logger {
         }
 
         byte[] log = buf.array();
+        // 计算出的校验码和日志中的校验码进行核对
         int checkSum1 = calChecksum(0, Arrays.copyOfRange(log, OF_DATA, log.length));
         int checkSum2 = Parser.parseInt(Arrays.copyOfRange(log, OF_CHECKSUM, OF_DATA));
         if(checkSum1 != checkSum2) {
@@ -206,6 +208,7 @@ public class LoggerImpl implements Logger {
         return log;
     }
 
+    // 得到日志文件中的一条日志记录
     @Override
     public byte[] next() {
         lock.lock();

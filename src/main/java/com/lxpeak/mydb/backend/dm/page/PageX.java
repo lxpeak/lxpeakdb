@@ -73,7 +73,7 @@ public class PageX {
         }
     }
 
-    // 将raw插入pg中的offset位置，不更新update
+    // 将raw插入pg中的offset位置
     public static void recoverUpdate(Page pg, byte[] raw, short offset) {
         pg.setDirty(true);
         System.arraycopy(raw, 0, pg.getData(), offset, raw.length);

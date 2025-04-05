@@ -110,6 +110,8 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
 
     @Override
     protected DataItem getForCache(long uid) throws Exception {
+        // 位掩码操作：(1L << 16) - 1 生成一个低16位全为1的掩码（即0x0000FFFF）。
+        //           uid & 0x0000FFFF 提取uid的低16位，赋值给li.offset，表示数据在页内的偏移量。
         short offset = (short)(uid & ((1L << 16) - 1));
         uid >>>= 32;
         int pgno = (int)(uid & ((1L << 32) - 1));
