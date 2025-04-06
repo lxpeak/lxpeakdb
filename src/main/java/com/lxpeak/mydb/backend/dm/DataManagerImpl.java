@@ -39,6 +39,7 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
         this.pIndex = new PageIndex();
     }
 
+    // 根据UID从缓存中获取DataItem，并校验有效位
     @Override
     public DataItem read(long uid) throws Exception {
         DataItemImpl di = (DataItemImpl)super.get(uid);
@@ -49,6 +50,8 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
         return di;
     }
 
+    // 在pageIndex中获取一个足以存储插入内容的页面的页号。
+    // 获取页面后，首先需要写入插入日志，接着才可以通过pageX插入数据，并返回插入位置的偏移，最后需要将页面信息重新插入pageIndex。
     @Override
     public long insert(long xid, byte[] data) throws Exception {
         byte[] raw = DataItem.wrapDataItemRaw(data);
@@ -57,7 +60,10 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
         }
 
         // 尝试获取可用页
+        // 如果找到可用的页面则跳出循环；
+        // 找不到可用的就自己创建一个新的Page，并将其添加到页索引pIndex中，并设置其空闲空间为最大值。
         PageInfo pi = null;
+        // 假设每次循环失败都创建新页，那么最多创建5个新页，避免无限制增长
         for(int i = 0; i < 5; i ++) {
             pi = pIndex.select(raw.length);
             if (pi != null) {
@@ -67,6 +73,7 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
                 pIndex.add(newPgno, PageX.MAX_FREE_SPACE);
             }
         }
+        // 循环结束后，如果仍未找到可用页，抛出数据库繁忙异常。为什么说繁忙呢，因为连自己刚添加的新页都找不到了，不是线程太多抢占资源了，就是新创建的页可能需要时间加入索引中
         if(pi == null) {
             throw Error.DatabaseBusyException;
         }
@@ -87,8 +94,11 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
         } finally {
             // 将取出的pg重新插入pIndex
             if(pg != null) {
+                // 重新计算页的空闲空间并更新索引
                 pIndex.add(pi.pgno, PageX.getFreeSpace(pg));
             } else {
+                // Q：为什么最后要直接将freeSpace的值设为0呢
+                // A：将报错的这一页的空闲空间设置为0，这样后续的insert的时候就不会找到此页。等下次使用时PageIndex会重新计算空闲空间，所以这次赋值为0不会影响下次使用。
                 pIndex.add(pi.pgno, freeSpace);
             }
         }
