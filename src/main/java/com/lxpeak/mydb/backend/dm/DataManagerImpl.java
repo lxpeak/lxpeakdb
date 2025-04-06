@@ -106,11 +106,13 @@ public class DataManagerImpl extends AbstractCache<DataItem> implements DataMana
 
     @Override
     public void close() {
+        // 这里的close只是把缓存里的数据清掉了，没有关闭连接
         super.close();
         logger.close();
 
         PageOne.setVcClose(pageOne);
         pageOne.release();
+        // 这里是真关闭连接了
         pc.close();
     }
 
