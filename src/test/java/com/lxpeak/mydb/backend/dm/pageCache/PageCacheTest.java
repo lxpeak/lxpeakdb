@@ -18,10 +18,10 @@ import com.lxpeak.mydb.backend.utils.RandomUtil;
 public class PageCacheTest {
 
     static Random random = new SecureRandom();
-    
+
     @Test
     public void testPageCache() throws Exception {
-        PageCache pc = PageCache.create("/tmp/pcacher_simple_test0", PageCache.PAGE_SIZE * 50);
+        PageCache pc = PageCache.create("D://mydb/dbTest/pcacher_simple_test0", PageCache.PAGE_SIZE * 50);
         for(int i = 0 ; i < 100; i ++) {
             byte[] tmp = new byte[PageCache.PAGE_SIZE];
             tmp[0] = (byte)i;
@@ -32,7 +32,7 @@ public class PageCacheTest {
         }
         pc.close();
 
-        pc = PageCache.open("/tmp/pcacher_simple_test0", PageCache.PAGE_SIZE * 50);
+        pc = PageCache.open("D://mydb/dbTest/pcacher_simple_test0", PageCache.PAGE_SIZE * 50);
         for(int i = 1; i <= 100; i ++) {
             Page pg = pc.getPage(i);
             assert pg.getData()[0] == (byte)i-1;
@@ -40,7 +40,7 @@ public class PageCacheTest {
         }
         pc.close();
 
-        assert new File("/tmp/pcacher_simple_test0.db").delete();
+        assert new File("D://mydb/dbTest/pcacher_simple_test0.db").delete();
     }
 
     private PageCache pc1;
@@ -48,7 +48,7 @@ public class PageCacheTest {
     private AtomicInteger noPages1;
     @Test
     public void testPageCacheMultiSimple() throws Exception {
-        pc1 = PageCache.create("/tmp/pcacher_simple_test1", PageCache.PAGE_SIZE * 50);
+        pc1 = PageCache.create("D://mydb/dbTest/pcacher_simple_test1", PageCache.PAGE_SIZE * 50);
         cdl1 = new CountDownLatch(200);
         noPages1 = new AtomicInteger(0);
         for(int i = 0; i < 200; i ++) {
@@ -57,7 +57,7 @@ public class PageCacheTest {
             new Thread(r).run();
         }
         cdl1.await();
-        assert new File("/tmp/pcacher_simple_test1.db").delete();
+        assert new File("D://mydb/dbTest/pcacher_simple_test1.db").delete();
     }
 
     private void worker1(int id) {
@@ -99,7 +99,7 @@ public class PageCacheTest {
     private Lock lockNew;
     @Test
     public void testPageCacheMulti() throws InterruptedException {
-        pc2 = PageCache.create("/tmp/pcacher_multi_test", PageCache.PAGE_SIZE * 10);
+        pc2 = PageCache.create("D://mydb/dbTest/pcacher_multi_test", PageCache.PAGE_SIZE * 10);
         mpc = new MockPageCache();
         lockNew = new ReentrantLock();
 
@@ -113,7 +113,7 @@ public class PageCacheTest {
         }
         cdl2.await();
 
-        assert new File("/tmp/pcacher_multi_test.db").delete();
+        assert new File("D://mydb/dbTest/pcacher_multi_test.db").delete();
     }
 
     private void worker2(int id) {
@@ -165,7 +165,7 @@ public class PageCacheTest {
                     Panic.panic(e);
                 }
                 byte[] newData = RandomUtil.randomBytes(PageCache.PAGE_SIZE);
-                
+
                 pg.lock();
                 mpg.setDirty(true);
                 for(int j = 0; j < PageCache.PAGE_SIZE; j ++) {

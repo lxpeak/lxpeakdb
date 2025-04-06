@@ -14,7 +14,7 @@ public class BPlusTreeTest {
     @Test
     public void testTreeSingle() throws Exception {
         TransactionManager tm = new MockTransactionManager();
-        DataManager dm = DataManager.create("/tmp/TestTreeSingle", PageCache.PAGE_SIZE*10, tm);
+        DataManager dm = DataManager.create("D://mydb/dbTest/TestTreeSingle", PageCache.PAGE_SIZE*10, tm);
 
         long root = BPlusTree.create(dm);
         BPlusTree tree = BPlusTree.load(root, dm);
@@ -30,7 +30,7 @@ public class BPlusTreeTest {
             assert uids.get(0) == i;
         }
 
-        assert new File("/tmp/TestTreeSingle.db").delete();
-        assert new File("/tmp/TestTreeSingle.log").delete();
+        assert new File("D://mydb/dbTest/TestTreeSingle.db").delete();
+        assert new File("D://mydb/dbTest/TestTreeSingle.log").delete();
     }
 }

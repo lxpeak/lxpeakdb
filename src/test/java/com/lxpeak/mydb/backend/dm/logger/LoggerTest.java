@@ -7,7 +7,7 @@ import org.junit.Test;
 public class LoggerTest {
     @Test
     public void testLogger() {
-        Logger lg = Logger.create("/tmp/logger_test");
+        Logger lg = Logger.create("D://mydb/dbTest/logger_test");
         lg.log("aaa".getBytes());
         lg.log("bbb".getBytes());
         lg.log("ccc".getBytes());
@@ -15,7 +15,7 @@ public class LoggerTest {
         lg.log("eee".getBytes());
         lg.close();
 
-        lg = Logger.open("/tmp/logger_test");
+        lg = Logger.open("D://mydb/dbTest/logger_test");
         lg.rewind();
 
         byte[] log = lg.next();
@@ -43,6 +43,6 @@ public class LoggerTest {
 
         lg.close();
 
-        assert new File("/tmp/logger_test.log").delete();
+        assert new File("D://mydb/dbTest/logger_test.log").delete();
     }
 }

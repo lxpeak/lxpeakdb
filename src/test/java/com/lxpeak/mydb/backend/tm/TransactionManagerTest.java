@@ -24,7 +24,7 @@ public class TransactionManagerTest {
 
     @Test
     public void testMultiThread() {
-        tmger = TransactionManager.create("/tmp/tranmger_test");
+        tmger = TransactionManager.create("D://mydb/dbTest/tranmger_test");
         transMap = new ConcurrentHashMap<>();
         cdl = new CountDownLatch(noWorkers);
         for(int i = 0; i < noWorkers; i ++) {
@@ -36,7 +36,7 @@ public class TransactionManagerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        assert new File("/tmp/tranmger_test.xid").delete();
+        assert new File("D://mydb/dbTest/tranmger_test.xid").delete();
     }
 
     private void worker() {

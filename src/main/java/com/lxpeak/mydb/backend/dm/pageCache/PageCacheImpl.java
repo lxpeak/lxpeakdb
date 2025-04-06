@@ -14,9 +14,8 @@ import com.lxpeak.mydb.backend.dm.page.PageImpl;
 import com.lxpeak.mydb.backend.utils.Panic;
 import com.lxpeak.mydb.common.Error;
 
-//第三章
 public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
-    
+
     private static final int MEM_MIN_LIM = 10;
     public static final String DB_SUFFIX = ".db";
 
@@ -140,5 +139,5 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     private static long pageOffset(int pgno) {
         return (pgno-1) * PAGE_SIZE;
     }
-    
+
 }

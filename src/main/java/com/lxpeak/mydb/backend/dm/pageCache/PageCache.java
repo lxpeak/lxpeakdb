@@ -23,7 +23,7 @@ public interface PageCache {
     int getPageNumber();
     void flushPage(Page pg);
 
-    // 与创建XID文件类似
+    // 与创建XID文件类似，memory是创建时所需空间，最后都用在Page上了（就靠Page保存数据）。
     public static PageCacheImpl create(String path, long memory) {
         File f = new File(path+PageCacheImpl.DB_SUFFIX);
         try {

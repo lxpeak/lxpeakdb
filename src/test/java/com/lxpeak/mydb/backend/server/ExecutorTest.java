@@ -11,7 +11,7 @@ import org.junit.Test;
 import com.lxpeak.mydb.backend.tbm.TableManager;
 
 public class ExecutorTest {
-    String path = "/tmp/mydb";
+    String path = "D://mydb/dbTest/mydb";
     long mem = (1 << 20) * 64;
 
     byte[] CREATE_TABLE = "create table test_table id int32 (index id)".getBytes();
@@ -33,7 +33,7 @@ public class ExecutorTest {
             exe.execute(INSERT);
         }
     }
-    
+
     @Test
     public void testInsert10000() throws Exception {
         Executor exe = testCreate();

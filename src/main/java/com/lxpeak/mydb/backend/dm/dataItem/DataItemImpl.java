@@ -13,6 +13,14 @@ import com.lxpeak.mydb.backend.dm.DataManagerImpl;
  * [ValidFlag] [DataSize] [Data]
  * ValidFlag 1字节，0为合法，1为非法
  * DataSize  2字节，标识Data的长度
+ *
+ * ValidFlag标识了该 DataItem 是否有效。删除一个 DataItem，只需要简单地将其有效位设置为 0。
+ * ----------------------------------------------------------------------------------------
+ * 在上层模块试图对 DataItem 进行修改时，需要遵循一定的流程：
+ * 1、在修改之前需要调用 before() 方法；
+ * 2、想要撤销修改时，调用 unBefore() 方法‘
+ * 3、在修改完成后，调用 after() 方法。
+ * 整个流程，主要是为了保存前相数据，并及时落日志。DM 会保证对 DataItem 的修改是原子性的。
  */
 // 第五章
 public class DataItemImpl implements DataItem {
@@ -25,6 +33,7 @@ public class DataItemImpl implements DataItem {
     private byte[] oldRaw;
     private Lock rLock;
     private Lock wLock;
+    // 保存一个 dm 的引用是因为其释放依赖 dm 的释放（dm 同时实现了缓存接口，用于缓存 DataItem），以及修改数据时落日志。
     private DataManagerImpl dm;
     private long uid;
     private Page pg;
@@ -32,7 +41,6 @@ public class DataItemImpl implements DataItem {
     public DataItemImpl(SubArray raw, byte[] oldRaw, Page pg, long uid, DataManagerImpl dm) {
         this.raw = raw;
         this.oldRaw = oldRaw;
-        // todo 什么时候用这种读写锁？
         ReadWriteLock lock = new ReentrantReadWriteLock();
         rLock = lock.readLock();
         wLock = lock.writeLock();
@@ -69,6 +77,7 @@ public class DataItemImpl implements DataItem {
         wLock.unlock();
     }
 
+    // 在使用完 DataItem 后，也应当及时调用 release() 方法，释放掉 DataItem 的缓存（由 DM 缓存 DataItem）。
     @Override
     public void release() {
         dm.releaseDataItem(this);
