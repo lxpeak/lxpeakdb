@@ -234,10 +234,8 @@ public class Recover {
             Panic.panic(e);
         }
         try {
-            // todo 更新操作是直接将对应内容替换，此时会有个问题，如果newRaw和oldRaw长度不同，page中后面的数据不就会受影响吗？
-            // A：1、撤销(UNDO)意味着这次操作是active的，也就是数据库出问题时这个操作还没有完成，那么就要把这次操作的结果撤销，
-            //      未完成的修改操作可能是已经将newRaw覆盖了oldRaw，也可能还没有修改，无论哪种都可以将旧数据直接覆盖回去解决。
-            //   2、重做(REDO)只对commit或abort的操作进行处理，两者都说明在数据库出问题前已经提交了，所以更新之后没有区别。
+            // Q：更新操作是直接将对应内容替换，此时会有个问题，如果newRaw和oldRaw长度不同，page中后面的数据不就会受影响吗？
+            // A：不会，因为newRaw和oldRaw在一开始就是相同长度的。参考上面的parseUpdateLog()方法，newRaw和oldRaw平分日志的剩余部分。
             PageX.recoverUpdate(pg, raw, offset);
         } finally {
             pg.release();
