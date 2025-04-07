@@ -4,7 +4,20 @@ import com.lxpeak.mydb.backend.tm.TransactionManager;
 
 public class Visibility {
 
-    //第七章
+    /*
+    * 版本跳跃问题，考虑如下的情况，假设 X 最初只有 x0 版本，T1 和 T2 都是可重复读的隔离级别：
+    *    T1 begin
+    *    T2 begin
+    *    R1(X) // T1读取x0
+    *    R2(X) // T2读取x0
+    *    U1(X) // T1将X更新到x1
+    *    T1 commit
+    *    U2(X) // T2将X更新到x2
+    *    T2 commit
+    * 这种情况实际运行起来是没问题的，但是逻辑上不太正确。
+    * T1将X从x0更新为了x1，这是没错的。但是 T2则是将X从x0更新成了x2，跳过了x1版本，假如是i=i+1这类操作的话，就会出问题，原本结果应该是i+2的，但是最后却是i+1。
+    *
+    * */
     //1、由于读已提交（RC）总是基于最新数据更新，跳跃在逻辑上不会发生，因为事务总能感知到中间版本。
     //2、版本跳跃即另一个事务已经修改了数据并且当前事务不可见该修改
     public static boolean isVersionSkip(TransactionManager tm, Transaction t, Entry e) {

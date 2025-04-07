@@ -12,7 +12,6 @@ import com.lxpeak.mydb.common.Error;
  *
  * 这里用的缓存就是一个用来保存数据库的临时信息的数据结构，为了能控制这个缓存的大小，所以设定了最大缓存数，由于有最大缓存数所以需要有淘汰策略。
  */
-//第三章
 public abstract class AbstractCache<T> {
     private HashMap<Long, T> cache;                     // 实际缓存的数据
     private HashMap<Long, Integer> references;          // 元素的引用个数
@@ -86,7 +85,7 @@ public abstract class AbstractCache<T> {
         // A：是对的，这里是第一次将key放进references中，如果以后还需要访问这个key，会在上面的while循环里返回
         references.put(key, 1);
         lock.unlock();
-        
+
         return obj;
     }
 

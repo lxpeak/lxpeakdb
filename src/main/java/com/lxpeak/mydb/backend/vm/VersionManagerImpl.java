@@ -12,7 +12,6 @@ import com.lxpeak.mydb.backend.common.AbstractCache;
 import com.lxpeak.mydb.backend.tm.TransactionManager;
 import com.lxpeak.mydb.backend.tm.TransactionManagerImpl;
 
-//第七章
 public class VersionManagerImpl extends AbstractCache<Entry> implements VersionManager {
 
     TransactionManager tm;
@@ -65,7 +64,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         }
     }
 
-    //insert() 则是将数据包裹成 Entry，无脑交给 DM 插入即可。
+    // insert() 则是将数据包裹成 Entry，无脑交给 DM 插入即可。
     // 返回uid
     @Override
     public long insert(long xid, byte[] data) throws Exception {
@@ -81,7 +80,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         return dm.insert(xid, raw);
     }
 
-    //主要是前置的三件事：一是可见性判断，二是获取资源的锁，三是版本跳跃判断。删除的操作只有一个设置 XMAX。
+    // 主要是前置的三件事：一是可见性判断，二是获取资源的锁，三是版本跳跃判断。删除的操作只有一个设置 XMAX。
     @Override
     public boolean delete(long xid, long uid) throws Exception {
         lock.lock();

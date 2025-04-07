@@ -22,7 +22,6 @@ import com.lxpeak.mydb.backend.dm.DataManagerImpl;
  * 3、在修改完成后，调用 after() 方法。
  * 整个流程，主要是为了保存前相数据，并及时落日志。DM 会保证对 DataItem 的修改是原子性的。
  */
-// 第五章
 public class DataItemImpl implements DataItem {
 
     static final int OF_VALID = 0;
@@ -58,6 +57,8 @@ public class DataItemImpl implements DataItem {
         return new SubArray(raw.raw, raw.start+OF_DATA, raw.end);
     }
 
+    // 1、before加写锁，after解除写锁。
+    // 2、before将需要操作的数据保存到自身的DataItem对象字段中，after会将从before得到的数据写为日志
     @Override
     public void before() {
         wLock.lock();
@@ -65,12 +66,15 @@ public class DataItemImpl implements DataItem {
         System.arraycopy(raw.raw, raw.start, oldRaw, 0, oldRaw.length);
     }
 
+    // 撤销before中的赋值，pg.setDirty(true)这句不用撤销，这个会在缓存释放阶段修改掉
     @Override
     public void unBefore() {
         System.arraycopy(oldRaw, 0, raw.raw, raw.start, oldRaw.length);
         wLock.unlock();
     }
 
+    // 1、before加写锁，after解除写锁。
+    // 2、before将需要操作的数据保存到自身的DataItem对象字段中，after会将从before得到的数据写为日志
     @Override
     public void after(long xid) {
         dm.logDataItem(xid, this);

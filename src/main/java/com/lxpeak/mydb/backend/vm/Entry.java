@@ -17,7 +17,6 @@ import com.lxpeak.mydb.backend.utils.Parser;
  * XMAX 则是删除该条记录（版本）的事务编号，
  * DATA 就是这条记录持有的数据。
  */
-// 第六章
 public class Entry {
 
     private static final int OF_XMIN = 0;
