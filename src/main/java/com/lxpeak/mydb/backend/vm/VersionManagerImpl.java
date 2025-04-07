@@ -111,15 +111,16 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
                 l = lt.add(xid, uid);
             } catch(Exception e) {
                 t.err = Error.ConcurrentUpdateException;
-                // todo 为什么先执行internAbort然后再执行t.autoAborted = true？
+                // Q: 为什么先执行internAbort然后再执行t.autoAborted = true？
+                // A: 为了防止internAbort方法内部的提前返回，必须确保在调用internAbort方法时autoAborted尚未被设置，从而确保回滚操作得以完整执行。
+                //    如果先设置t.autoAborted = true，internAbort方法会直接跳过释放锁（lt.remove(xid)）和更新事务状态（tm.abort(xid)）的关键逻辑。
                 internAbort(xid, true);
                 t.autoAborted = true;
                 throw t.err;
             }
-            // 如果 l = lt.add(xid, uid);中的l非空，代表获得了锁，也就是UID正被某个UID持有(u2x中存在该UID)，
-            // 所以这里会进入if方法里，然后阻塞在l.lock()这里。（理论上应该如此，但是由于这里用的是ReentrantLock，是可重入锁，所以不会锁住，需要改成不可重入锁）
+            // 如果 l = lt.add(xid, uid);中的l非空，代表获得了锁，也就是资源UID正被某个事务XID持有(u2x中存在该UID)，所以这里会进入if方法。
             if(l != null) {
-                l.lock();   // todo 阻塞在这一步（实际上应该是阻塞不了的）
+                l.lock();
                 l.unlock();
             }
 
@@ -131,7 +132,6 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
 
             if(Visibility.isVersionSkip(tm, t, entry)) {
                 t.err = Error.ConcurrentUpdateException;
-                // todo 为什么先执行internAbort然后再执行t.autoAborted = true？
                 internAbort(xid, true);
                 t.autoAborted = true;
                 throw t.err;
@@ -199,13 +199,19 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
     private void internAbort(long xid, boolean autoAborted) {
         lock.lock();
         Transaction t = activeTransaction.get(xid);
+        // 如果是手动回滚，则从事务列表中移除
         if(!autoAborted) {
             activeTransaction.remove(xid);
         }
         lock.unlock();
 
-        // todo 先后有两次判断，一次是autoAborted，一次是t.autoAborted，
+        // Q：先后有两次判断，一次是autoAborted，一次是t.autoAborted，
         //       但是我看对t.autoAborted赋值的代码，是先执行这个方法再对t.autoAborted赋值true，为什么不先赋值true再执行这个方法呢？
+        // A：1、先执行这个方法再对t.autoAborted赋值true是因为保证internAbort方法执行完成后，
+        //      才对t.autoAborted做标记，后续再执行这个方法时，发现t.autoAborted是true就直接返回，不再调用释放资源的方法了。
+        //    2、t.autoAborted是全局变量，表示真正的状态。如果它是true，那这个事务就是true（自动回滚了），
+        //       而autoAborted是调用方法时代码逻辑认为这里应该是true，至于是不是已经赋值为true了，还是依然为false，需要通过t.autoAborted这个全局变量来判断。
+        //       比如abort方法中的autoAborted值为false，就是因为在代码逻辑中认为不应该是自动回滚的，所以是false。
         if(t.autoAborted) return;
         lt.remove(xid);
         tm.abort(xid);

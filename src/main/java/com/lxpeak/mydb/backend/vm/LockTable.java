@@ -46,17 +46,21 @@ public class LockTable {
         * */
         lock.lock();
         try {
+            // 事务xid是否持有uid这个资源
             if(isInList(x2u, xid, uid)) {
                 return null;
             }
+            // 这个资源(uid)是否被某个事务(xid)持有
             if(!u2x.containsKey(uid)) {
+                // 如果资源未被持有，则将该资源分配给该事务，并更新x2u和u2x
                 u2x.put(uid, xid);
                 putIntoList(x2u, xid, uid);
                 return null;
             }
+            // 如果资源被其他事务持有，则将该事务加入到等待该资源的队列中
             waitU.put(xid, uid);
-            //putIntoList(wait, xid, uid);
             putIntoList(wait, uid, xid);
+            // 检测是否会导致死锁
             if(hasDeadLock()) {
                 waitU.remove(xid);
                 removeFromList(wait, uid, xid);
@@ -120,17 +124,17 @@ public class LockTable {
 
     /*
     * 查找图中是否有环的算法非常简单，就是一个深搜，只是需要注意这个图不一定是连通图。
-    * 思路就是为每个节点设置一个访问戳，都初始化为 -1，随后遍历所有节点，以每个非 -1 的节点作为根进行深搜，
+    * 思路就是为每个节点设置一个访问戳，一开始初始化为null，随后遍历所有节点，以每个非null且未被遍历的节点作为根进行深搜，
     * 并将深搜该连通图中遇到的所有节点都设置为同一个数字，不同的连通图数字不同。这样，如果在遍历某个图时，遇到了之前遍历过的节点，说明出现了环。
     * */
     private boolean hasDeadLock() {
         xidStamp = new HashMap<>();
         // 染色用的标记
-        // todo 不过和描述不符，是不是应该是stamp = -1？
         stamp = 1;
         for(long xid : x2u.keySet()) {
+            // 如果xid不存在，s=null，因为是包装类。
             Integer s = xidStamp.get(xid);
-            // 从这里能看出来stamp默认是1的，描述可能出错了。这里的作用就是筛掉已经染色的节点，如果xid不存在的话应该是0，xid存在的话最小也是2。
+            //第一个条件判断是不是初始值（初始值是null），第二个条件判断是不是被访问过了
             if(s != null && s > 0) {
                 continue;
             }
