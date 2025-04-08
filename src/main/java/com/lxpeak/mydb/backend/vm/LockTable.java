@@ -96,7 +96,9 @@ public class LockTable {
         }
     }
 
-    // 从等待队列中选择一个xid来占用uid
+    // todo
+    // 从等待队列中选择一个xid来占用uid.
+    // while循环释放掉了这个线程所有持有的资源的锁，这些资源可以被等待的线程所获取
     private void selectNewXID(long uid) {
         u2x.remove(uid);
         List<Long> l = wait.get(uid);

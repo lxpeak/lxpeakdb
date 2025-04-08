@@ -118,8 +118,10 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
                 t.autoAborted = true;
                 throw t.err;
             }
-            // 如果 l = lt.add(xid, uid);中的l非空，代表获得了锁，也就是资源UID正被某个事务XID持有(u2x中存在该UID)，所以这里会进入if方法。
+            // 如果 l = lt.add(xid, uid);中的l非空，代表获得了锁，也就是UID正被某个UID持有(u2x中存在该UID)，
+            // 所以这里会进入if方法里，然后阻塞在l.lock()这里。（理论上应该如此，但是由于这里用的是ReentrantLock，是可重入锁，所以不会锁住，需要改成不可重入锁）
             if(l != null) {
+                // todo 阻塞在这一步（实际上应该是阻塞不了的）
                 l.lock();
                 l.unlock();
             }
@@ -146,7 +148,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
     }
 
     /*
-    * begin() 开启一个事务，并初始化事务的结构，将其存放在 activeTransaction 中，用于检查和快照使用。
+    * begin()开启一个事务，并初始化事务的结构，将其存放在activeTransaction中，用于检查和快照使用。
     * */
     @Override
     public long begin(int level) {
