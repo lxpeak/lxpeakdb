@@ -78,7 +78,6 @@ import com.lxpeak.mydb.backend.parser.statement.Update;
 *
 *
 * */
-// 第九章
 public class Parser {
     public static Object Parse(byte[] statement) throws Exception {
         Tokenizer tokenizer = new Tokenizer(statement);

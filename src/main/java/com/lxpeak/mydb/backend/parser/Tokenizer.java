@@ -2,7 +2,6 @@ package com.lxpeak.mydb.backend.parser;
 
 import com.lxpeak.mydb.common.Error;
 
-// 第九章
 public class Tokenizer {
     private byte[] stat; //原始输入字节流
     private int pos; //当前解析位置

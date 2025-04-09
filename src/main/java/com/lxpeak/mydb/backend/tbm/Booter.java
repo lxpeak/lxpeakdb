@@ -10,7 +10,6 @@ import com.lxpeak.mydb.common.Error;
 import com.lxpeak.mydb.backend.utils.Panic;
 
 // 记录第一个表的uid
-// 第九章
 public class Booter {
     public static final String BOOTER_SUFFIX = ".bt";
     public static final String BOOTER_TMP_SUFFIX = ".bt_tmp";

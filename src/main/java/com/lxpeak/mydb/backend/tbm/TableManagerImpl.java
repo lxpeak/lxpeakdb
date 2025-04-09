@@ -28,7 +28,6 @@ import com.lxpeak.mydb.backend.utils.Parser;
 * 以期通过操作系统重命名文件的原子性，来保证操作的原子性。
 *
 * */
-//第九章
 public class TableManagerImpl implements TableManager {
     VersionManager vm;
     DataManager dm;

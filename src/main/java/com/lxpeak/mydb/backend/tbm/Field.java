@@ -19,7 +19,6 @@ import com.lxpeak.mydb.common.Error;
  * [FieldName][TypeName][IndexUid]
  * 如果field无索引，IndexUid为0
  */
-// 第九章
 public class Field {
     long uid;
     private Table tb;

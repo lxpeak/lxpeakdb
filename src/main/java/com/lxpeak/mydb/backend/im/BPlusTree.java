@@ -16,7 +16,6 @@ import com.lxpeak.mydb.backend.dm.dataItem.DataItem;
 * 由于 B+ 树在插入删除时，会动态调整，根节点不是固定节点，于是设置一个 bootDataItem，该 DataItem 中存储了根节点的 UID。
 * 可以注意到，IM 在操作 DM 时，使用的事务都是 SUPER_XID。
 * */
-//第八章
 public class BPlusTree {
     DataManager dm;
     long bootUid;

@@ -52,4 +52,5 @@ insert into students values 1 "ZhangSan" 18
 select * from students where id = 1
 ```
 
+目前只支持基于索引查找数据，不支持全表扫描。
 

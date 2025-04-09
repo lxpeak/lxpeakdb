@@ -33,7 +33,6 @@ import com.lxpeak.mydb.backend.utils.Parser;
  * 计算 Where 的范围，具体可以查看 Table 的 parseWhere() 和 calWhere() 方法，以及 Field 类的 calExp() 方法。
  *
  */
-// 第九章
 public class Table {
     TableManager tbm;
     long uid;

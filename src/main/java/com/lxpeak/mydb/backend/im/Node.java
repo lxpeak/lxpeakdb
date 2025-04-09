@@ -21,7 +21,6 @@ import com.lxpeak.mydb.backend.utils.Parser;
  */
 
 /**/
-// 第八章
 public class Node {
     static final int IS_LEAF_OFFSET = 0;
     static final int NO_KEYS_OFFSET = IS_LEAF_OFFSET+1;
@@ -31,6 +30,7 @@ public class Node {
     static final int BALANCE_NUMBER = 32;
     static final int NODE_SIZE = NODE_HEADER_SIZE + (2*8)*(BALANCE_NUMBER*2+2);
 
+    // 持有B+树结构的引用，DataItem的引用和SubArray的引用，用于方便快速修改数据和释放数据
     BPlusTree tree;
     DataItem dataItem;
     SubArray raw;
@@ -68,26 +68,26 @@ public class Node {
         return Parser.parseLong(Arrays.copyOfRange(raw.raw, raw.start+SIBLING_OFFSET, raw.start+SIBLING_OFFSET+8));
     }
 
-    // kth表示第几个key
+    // 设置第K个子节点
     static void setRawKthSon(SubArray raw, long uid, int kth) {
         int offset = raw.start+NODE_HEADER_SIZE+kth*(8*2);
         // 其实最终效果就是给raw.raw复制
         System.arraycopy(Parser.long2Byte(uid), 0, raw.raw, offset, 8);
     }
 
-    // kth表示第几个key
+    // 得到第K个子节点
     static long getRawKthSon(SubArray raw, int kth) {
         int offset = raw.start+NODE_HEADER_SIZE+kth*(8*2);
         return Parser.parseLong(Arrays.copyOfRange(raw.raw, offset, offset+8));
     }
 
-    // kth表示第几个key
+    // 设置第K个子节点的Key
     static void setRawKthKey(SubArray raw, long key, int kth) {
         int offset = raw.start+NODE_HEADER_SIZE+kth*(8*2)+8;
         System.arraycopy(Parser.long2Byte(key), 0, raw.raw, offset, 8);
     }
 
-    // kth表示第几个key
+    // 得到第K个子节点的key
     static long getRawKthKey(SubArray raw, int kth) {
         int offset = raw.start+NODE_HEADER_SIZE+kth*(8*2)+8;
         return Parser.parseLong(Arrays.copyOfRange(raw.raw, offset, offset+8));
@@ -166,7 +166,7 @@ public class Node {
         long siblingUid;
     }
 
-    // 寻找对应 key 的 UID, 如果找不到, 则返回兄弟节点的 UID
+    // 寻找对应key的UID，如果找不到，则返回兄弟节点的UID
     public SearchNextRes searchNext(long key) {
         // 读锁
         dataItem.rLock();
@@ -176,6 +176,7 @@ public class Node {
             int noKeys = getRawNoKeys(raw);
             for(int i = 0; i < noKeys; i ++) {
                 long ik = getRawKthKey(raw, i);
+                // 遍历键，找到第一个大于目标键的位置，返回对应子节点UID；若无，返回兄弟节点UID
                 if(key < ik) {
                     res.uid = getRawKthSon(raw, i);
                     res.siblingUid = 0;
@@ -198,7 +199,6 @@ public class Node {
 
     // leafSearchRange 方法在当前节点进行范围查找，范围是 [leftKey, rightKey]，
     // 这里约定如果 rightKey 大于等于该节点的最大的 key, 则还同时返回兄弟节点的 UID，方便继续搜索下一个节点。
-    // todo 不清楚具体用在哪个环节
     public LeafSearchRangeRes leafSearchRange(long leftKey, long rightKey) {
         dataItem.rLock();
         try {
@@ -207,6 +207,7 @@ public class Node {
             int kth = 0;
             while(kth < noKeys) {
                 long ik = getRawKthKey(raw, kth);
+                // 找到比leftKey大的key后就跳出循环，开始从leftKey作为起点进行查找
                 if(ik >= leftKey) {
                     break;
                 }
@@ -223,6 +224,7 @@ public class Node {
                 }
             }
             long siblingUid = 0;
+            // 如果该节点找完了，则返回兄弟节点的UID，方便继续搜索下一个节点。
             if(kth == noKeys) {
                 siblingUid = getRawSibling(raw);
             }
