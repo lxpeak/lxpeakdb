@@ -2,6 +2,7 @@ package com.lxpeak.mydb.backend.vm;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,6 +47,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         try {
             entry = super.get(uid);
         } catch(Exception e) {
+            // 这里的异常是返回的本对象中getForCache()抛出的异常
             if(e == Error.NullEntryException) {
                 return null;
             } else {
@@ -105,7 +107,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
             if(!Visibility.isVisible(tm, t, entry)) {
                 return false;
             }
-            Lock l = null;
+            Semaphore l = null;
             try {
                 // add方法里会检测是否死锁，并返回Lock对象
                 l = lt.add(xid, uid);
@@ -119,11 +121,11 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
                 throw t.err;
             }
             // 如果 l = lt.add(xid, uid);中的l非空，代表获得了锁，也就是UID正被某个UID持有(u2x中存在该UID)，
-            // 所以这里会进入if方法里，然后阻塞在l.lock()这里。（理论上应该如此，但是由于这里用的是ReentrantLock，是可重入锁，所以不会锁住，需要改成不可重入锁）
+            // 所以这里会进入if方法里，然后阻塞在l.lock()这里。（理论上应该如此，之前这里用的是ReentrantLock，是可重入锁，所以不会锁住）
             if(l != null) {
-                // todo 阻塞在这一步（实际上应该是阻塞不了的）
-                l.lock();
-                l.unlock();
+                // 阻塞在这一步
+                l.acquire();
+                l.release();
             }
 
             // Q：为什么如果Xmax是xid就返回false?
@@ -164,7 +166,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
     }
 
     /*
-    * commit() 方法提交一个事务，主要就是 free 掉相关的结构，并且释放持有的锁，并修改 TM 状态。
+    * commit()方法提交一个事务，主要就是free掉相关的结构，并且释放持有的锁，并修改TM状态。
     * */
     @Override
     public void commit(long xid) throws Exception {
@@ -186,6 +188,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         activeTransaction.remove(xid);
         lock.unlock();
 
+        // 释放所有它持有的锁
         lt.remove(xid);
         tm.commit(xid);
     }
@@ -223,6 +226,7 @@ public class VersionManagerImpl extends AbstractCache<Entry> implements VersionM
         super.release(entry.getUid());
     }
 
+    // 本类的read方法调用super.get(uid)时，会调用AbstractCache的实现方法，也就是这个getForCache
     @Override
     protected Entry getForCache(long uid) throws Exception {
         Entry entry = Entry.loadEntry(this, uid);

@@ -2,6 +2,7 @@ package com.lxpeak.mydb.backend.vm;
 
 import static org.junit.Assert.assertThrows;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 
 import com.lxpeak.mydb.backend.utils.Panic;
@@ -29,7 +30,7 @@ public class LockTableTest {
         } catch (Exception e) {
             Panic.panic(e);
         }
-        
+
         assertThrows(RuntimeException.class, ()->lt.add(1, 2));
     }
 
@@ -38,13 +39,17 @@ public class LockTableTest {
         LockTable lt = new LockTable();
         for(long i = 1; i <= 100; i ++) {
             try {
-                Lock o = lt.add(i, i);
+                Semaphore o = lt.add(i, i);
                 if(o != null) {
                     Runnable r = () -> {
-                        o.lock();
-                        o.unlock();
+                        try {
+                            o.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        o.release();
                     };
-                    new Thread(r).run();
+                    new Thread(r).start();
                 }
             } catch (Exception e) {
                 Panic.panic(e);
@@ -53,13 +58,17 @@ public class LockTableTest {
 
         for(long i = 1; i <= 99; i ++) {
             try {
-                Lock o = lt.add(i, i+1);
+                Semaphore o = lt.add(i, i+1);
                 if(o != null) {
                     Runnable r = () -> {
-                        o.lock();
-                        o.unlock();
+                        try {
+                            o.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        o.release();
                     };
-                    new Thread(r).run();
+                    new Thread(r).start();
                 }
             } catch (Exception e) {
                 Panic.panic(e);

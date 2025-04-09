@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,7 +23,7 @@ public class LockTable {
     private Map<Long, List<Long>> x2u;  // 某个XID已经获得的资源的UID列表
     private Map<Long, Long> u2x;        // UID被某个XID持有
     private Map<Long, List<Long>> wait; // 正在等待UID的XID列表
-    private Map<Long, Lock> waitLock;   // 正在等待资源的XID的锁
+    private Map<Long, Semaphore> waitLock;   // 正在等待资源的XID的锁
     private Map<Long, Long> waitU;      // XID正在等待的UID
     private Lock lock;
 
@@ -37,7 +38,7 @@ public class LockTable {
 
     // 不需要等待则返回null，否则返回锁对象
     // 会造成死锁则抛出异常
-    public Lock add(long xid, long uid) throws Exception {
+    public Semaphore add(long xid, long uid) throws Exception {
         /*
         * 当尝试为一个事务添加一个资源的锁时，首先检查该事务是否已经持有该资源，
         * 1、如果是的话直接返回null，表示不需要等待。
@@ -66,17 +67,18 @@ public class LockTable {
                 removeFromList(wait, uid, xid);
                 throw Error.DeadlockException;
             }
-            Lock l = new ReentrantLock();
-            l.lock();
-            waitLock.put(xid, l);
-            return l;
+            Semaphore semaphore = new Semaphore(1);
+            // Lock l = new ReentrantLock();
+            semaphore.acquire();
+            waitLock.put(xid, semaphore);
+            return semaphore;
 
         } finally {
             lock.unlock();
         }
     }
 
-    //在一个事务 commit 或者 abort 时，就可以释放所有它持有的锁，并将自身从等待图中删除。
+    //在一个事务commit或者abort时，就可以释放所有它持有的锁，并将自身从等待图中删除。
     public void remove(long xid) {
         lock.lock();
         try {
@@ -90,13 +92,11 @@ public class LockTable {
             waitU.remove(xid);
             x2u.remove(xid);
             waitLock.remove(xid);
-
         } finally {
             lock.unlock();
         }
     }
 
-    // todo
     // 从等待队列中选择一个xid来占用uid.
     // while循环释放掉了这个线程所有持有的资源的锁，这些资源可以被等待的线程所获取
     private void selectNewXID(long uid) {
@@ -111,9 +111,9 @@ public class LockTable {
                 continue;
             } else {
                 u2x.put(uid, xid);
-                Lock lo = waitLock.remove(xid);
+                Semaphore lo = waitLock.remove(xid);
                 waitU.remove(xid);
-                lo.unlock();
+                lo.release();
                 break;
             }
         }

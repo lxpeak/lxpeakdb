@@ -54,11 +54,11 @@ import com.lxpeak.mydb.backend.parser.statement.Update;
 *
 * <insert statement>
 *     insert into <table name> values <value list>
-*         insert into student values 5 "Zhang Yuanjia" 22
+*         insert into student values 5 "Zhang SAN" 22
 *
 * <delete statement>
 *     delete from <table name> <where statement>
-*         delete from student where name = "Zhang Yuanjia"
+*         delete from student where name = "Zhang San"
 *
 * <update statement>
 *     update <table name> set <field name>=<value> [<where statement>]
@@ -328,7 +328,7 @@ public class Parser {
 
     private static SingleExpression parseSingleExp(Tokenizer tokenizer) throws Exception {
         SingleExpression exp = new SingleExpression();
-        
+
         String field = tokenizer.peek();
         if(!isName(field)) {
             throw Error.InvalidCommandException;
@@ -371,7 +371,7 @@ public class Parser {
         if(!"".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        
+
         Drop drop = new Drop();
         drop.tableName = tableName;
         return drop;
@@ -429,7 +429,7 @@ public class Parser {
             fNames.add(field);
             fTypes.add(fieldType);
             tokenizer.pop();
-            
+
             String next = tokenizer.peek();
             if(",".equals(next)) {
                 continue;
