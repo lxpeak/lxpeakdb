@@ -19,22 +19,22 @@ Java 实现的简单的数据库，目前有以下功能：
 mvn compile
 ```
 
-接着执行以下命令以 D://mydb/ 作为路径创建数据库：
+接着执行以下命令以 D://lxpeakdb/ 作为路径创建数据库：
 
 ```shell
-mvn exec:java -Dexec.mainClass="com.lxpeak.mydb.backend.Launcher" -Dexec.args="-create D://mydb/db1"
+mvn exec:java -Dexec.mainClass="com.lxpeak.lxpeakdb.backend.Launcher" -Dexec.args="-create D://lxpeakdb/db1"
 ```
 
 随后通过以下命令以默认参数启动数据库服务：
 
 ```shell
-mvn exec:java -Dexec.mainClass="com.lxpeak.mydb.backend.Launcher" -Dexec.args="-open D://mydb/db1"
+mvn exec:java -Dexec.mainClass="com.lxpeak.lxpeakdb.backend.Launcher" -Dexec.args="-open D://lxpeakdb/db1"
 ```
 
 这时数据库服务就已经启动在本机的 9999 端口。重新启动一个终端，执行以下命令启动客户端连接数据库：
 
 ```shell
-mvn exec:java -Dexec.mainClass="com.lxpeak.mydb.client.Launcher"
+mvn exec:java -Dexec.mainClass="com.lxpeak.lxpeakdb.client.Launcher"
 ```
 
 会启动一个交互式命令行，就可以在这里输入类 SQL 语法，回车会发送语句到服务，并输出执行的结果。
