@@ -68,7 +68,7 @@ public class Field {
         this.index = Parser.parseLong(Arrays.copyOfRange(raw, position, position+8));
         if(index != 0) {
             try {
-                // todo 待补充
+                // 加载B+树，其实就是create和open中的open
                 bt = BPlusTree.load(index, ((TableManagerImpl)tb.tbm).dm);
             } catch(Exception e) {
                 Panic.panic(e);
