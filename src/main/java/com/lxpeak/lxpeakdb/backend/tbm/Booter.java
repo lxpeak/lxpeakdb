@@ -9,6 +9,13 @@ import java.nio.file.StandardCopyOption;
 import com.lxpeak.lxpeakdb.common.Error;
 import com.lxpeak.lxpeakdb.backend.utils.Panic;
 
+/*
+* 通过Booter类和bt文件，来管理LXPEAKDB的启动信息，虽然现在所需的启动信息，只有一个：头表的UID。
+*
+* Booter类对外提供了两个方法：load和update，并保证了其原子性。
+* update 在修改 bt 文件内容时，没有直接对bt文件进行修改，而是首先将内容写入一个bt_tmp文件中，
+* 随后将这个文件重命名为bt文件，通过操作系统重命名文件的原子性来保证操作的原子性。
+* */
 // 记录第一个表的uid
 public class Booter {
     public static final String BOOTER_SUFFIX = ".bt";

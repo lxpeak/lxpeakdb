@@ -13,8 +13,8 @@ import com.lxpeak.lxpeakdb.backend.utils.Parser;
 import com.lxpeak.lxpeakdb.backend.dm.dataItem.DataItem;
 
 /*
-* 由于 B+ 树在插入删除时，会动态调整，根节点不是固定节点，于是设置一个 bootDataItem，该 DataItem 中存储了根节点的 UID。
-* 可以注意到，IM 在操作 DM 时，使用的事务都是 SUPER_XID。
+* 由于 B+ 树在插入删除时，会动态调整，根节点不是固定节点，于是设置一个 bootDataItem，该DataItem中存储了根节点的UID。
+* 可以注意到，IM在操作DM时，使用的事务都是SUPER_XID。
 * ------------------------------------------------------------------------------------------------------
 *
 * 注意：IM没有提供删除索引的能力。当上层模块通过VM删除某个Entry时，实际的操作是设置其XMAX。
@@ -26,6 +26,9 @@ public class BPlusTree {
     DataItem bootDataItem;
     Lock bootLock;
 
+    // 1、创建B+树时会先创建根节点，然后创建boot节点，将根节点root保存到boot节点中，返回的也是boot的uid。
+    // 2、使用boot保存根节点uid的原因就是根节点可能因分裂而动态变化，所以用boot作为入口，然后去获取真正的根节点。
+    // 3、当根节点分裂时，只需通过updateRootUid方法更新根节点uid，而bootUid保持不变，外部系统只需记住bootUid，无需关心根节点的动态变化。
     public static long create(DataManager dm) throws Exception {
         byte[] rawRoot = Node.newNilRootRaw();
         long rootUid = dm.insert(TransactionManagerImpl.SUPER_XID, rawRoot);
