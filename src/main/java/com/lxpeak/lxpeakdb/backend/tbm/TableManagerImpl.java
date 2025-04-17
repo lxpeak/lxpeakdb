@@ -154,8 +154,13 @@ public class TableManagerImpl implements TableManager {
         int count = table.update(xid, update);
         return ("update " + count).getBytes();
     }
+    
+    /*
+    * Q：为什么TBM的delete记录的时候，不需要删除索引呢
+    * A：当上层模块通过VM删除某个Entry时，实际的操作是设置其XMAX。如果不去删除对应索引的话，当后续再次尝试读取该Entry时，是可以通过索引寻找到的，
+    *    但是由于设置了XMAX，所以会在寻找不到合适的版本时返回一个找不到对应内容的错误。
+    * */
     @Override
-    //todo 别人问“为什么TBM的delete记录的时候，不需要删除索引呢”
     public byte[] delete(long xid, Delete delete) throws Exception {
         lock.lock();
         Table table = tableCache.get(delete.tableName);
