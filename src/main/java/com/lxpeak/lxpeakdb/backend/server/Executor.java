@@ -31,6 +31,9 @@ public class Executor {
         }
     }
 
+    // 1、处理Begin、Commit、Abort命令，其他的交给execute2
+    // 2、xid是用来跟踪当前是否有活跃的事务的。比如，当xid不等于0的时候，表示当前有一个事务在进行中，
+    //    而Commit或Abort之后，事务就结束了，所以需要将xid重置为0，表示没有事务在进行。
     public byte[] execute(byte[] sql) throws Exception {
         System.out.println("Execute: " + new String(sql));
         // 根据Parse()方法得到sql语句对应的结构化信息对象（Begin、Commit、Abort、Show、Create、Select、Insert、Delete、Update），
@@ -62,6 +65,7 @@ public class Executor {
         }
     }
 
+    // 处理Show、Create、Select、Insert、Delete、Update
     private byte[] execute2(Object stat) throws Exception {
         boolean tmpTransaction = false;
         Exception e = null;

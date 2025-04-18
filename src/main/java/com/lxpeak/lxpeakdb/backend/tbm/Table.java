@@ -22,15 +22,15 @@ import com.lxpeak.lxpeakdb.backend.tm.TransactionManagerImpl;
 import com.lxpeak.lxpeakdb.backend.utils.Parser;
 
 /**
- * Table 维护了表结构
- * 一个数据库中存在多张表，TBM 使用链表的形式将其组织起来，每一张表都保存一个指向下一张表的 UID。表的二进制结构如下：
- * [TableName][NextTable]
+ * Table维护了表结构
+ * 一个数据库中存在多张表，TBM使用链表的形式将其组织起来，每一张表都保存一个指向下一张表的UID。表的二进制结构如下：
+ * [TableName][NextTable（8字节）]
  * [Field1Uid][Field2Uid]...[FieldNUid]
  *
  * ----------------------------------------------------
- * 对表和字段的操作，有一个很重要的步骤，就是计算 Where 条件的范围，目前 LxPeakDB 的 Where 只支持两个条件的与和或。
- * 例如有条件的 Delete，计算 Where，最终就需要获取到条件范围内所有的 UID。LxPeakDB 只支持已索引字段作为 Where 的条件。
- * 计算 Where 的范围，具体可以查看 Table 的 parseWhere() 和 calWhere() 方法，以及 Field 类的 calExp() 方法。
+ * 对表和字段的操作，有一个很重要的步骤，就是计算Where条件的范围，目前LxPeakDB的Where只支持两个条件的与和或。
+ * 例如有条件的Delete，计算Where，最终就需要获取到条件范围内所有的UID。LxPeakDB只支持已索引字段作为Where的条件。
+ * 计算Where的范围，具体可以查看Table的parseWhere()和calWhere()方法，以及Field类的calExp()方法。
  *
  */
 public class Table {
@@ -82,18 +82,27 @@ public class Table {
         this.nextUid = nextUid;
     }
 
+    /*
+    * 表的二进制结构如下：
+    * [TableName][NextTable]
+    * [Field1Uid][Field2Uid]...[FieldNUid]
+    * */
     private Table parseSelf(byte[] raw) {
         int position = 0;
         ParseStringRes res = Parser.parseString(raw);
+        // 字符串和下一个要读取的位置
         name = res.str;
         position += res.next;
+        // 根据表的二进制结构得到NextTable的Uid
         nextUid = Parser.parseLong(Arrays.copyOfRange(raw, position, position+8));
         position += 8;
 
+        // 遍历得到全部field
         while(position < raw.length) {
             long uid = Parser.parseLong(Arrays.copyOfRange(raw, position, position+8));
             position += 8;
             fields.add(Field.loadField(this, uid));
+            // System.out.println("Table对象是："+this);
         }
         return this;
     }

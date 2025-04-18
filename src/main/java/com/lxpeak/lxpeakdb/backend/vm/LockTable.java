@@ -89,8 +89,7 @@ public class LockTable {
                     selectNewXID(uid);
                 }
             }
-            // debug
-            // 对waitU包含的(xid, uid)进行了删除，但是好像wait的(uid, xid)记录没有删除，会导致wait.get(uid)的数组永远不为空，被删除的xid仍在等待获取uid
+            // 对waitU包含的(xid, uid)进行了删除，但是好像wait的(uid, xid)记录没有删除，会导致wait.get(uid)的数组永远不为空，被删除的xid仍在等待获取uid，所以这里加了这段代码
             Long waitUid = waitU.get(xid);
             if (waitUid != null)
                 removeFromList(wait, waitUid, xid);

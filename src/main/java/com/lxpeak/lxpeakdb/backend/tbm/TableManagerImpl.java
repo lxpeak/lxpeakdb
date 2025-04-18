@@ -49,22 +49,27 @@ public class TableManagerImpl implements TableManager {
     private void loadTables() {
         long uid = firstTableUid();
         while(uid != 0) {
+            // TBM使用链表的形式将其组织起来，每一张表都保存一个指向下一张表的UID。
             Table tb = Table.loadTable(this, uid);
             uid = tb.nextUid;
             tableCache.put(tb.name, tb);
         }
     }
 
+    // 从booter文件中获得第一个表的UID
     private long firstTableUid() {
         byte[] raw = booter.load();
         return Parser.parseLong(raw);
     }
 
+    // 在Booter文件中更新第一个table的UID
     private void updateFirstTableUid(long uid) {
         byte[] raw = Parser.long2Byte(uid);
         booter.update(raw);
     }
 
+    // 开启一个事务，初始化事务的结构，将其存放在activeTransaction中，并返回该事务XID和”begin“字符串的字节数组
+    // 对VM的begin方法的一层包装
     @Override
     public BeginRes begin(Begin begin) {
         BeginRes res = new BeginRes();
@@ -73,11 +78,15 @@ public class TableManagerImpl implements TableManager {
         res.result = "begin".getBytes();
         return res;
     }
+
+    // 对VM的commit方法的一层包装
     @Override
     public byte[] commit(long xid) throws Exception {
         vm.commit(xid);
         return "commit".getBytes();
     }
+
+    // 对VM的abort方法的一层包装
     @Override
     public byte[] abort(long xid) {
         vm.abort(xid);
@@ -154,7 +163,7 @@ public class TableManagerImpl implements TableManager {
         int count = table.update(xid, update);
         return ("update " + count).getBytes();
     }
-    
+
     /*
     * Q：为什么TBM的delete记录的时候，不需要删除索引呢
     * A：当上层模块通过VM删除某个Entry时，实际的操作是设置其XMAX。如果不去删除对应索引的话，当后续再次尝试读取该Entry时，是可以通过索引寻找到的，
