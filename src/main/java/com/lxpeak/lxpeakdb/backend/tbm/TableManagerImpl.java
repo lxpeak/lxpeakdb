@@ -32,7 +32,9 @@ public class TableManagerImpl implements TableManager {
     VersionManager vm;
     DataManager dm;
     private Booter booter;
+    // 已提交事务所创建或修改的表，这些表对所有事务可见
     private Map<String, Table> tableCache;
+    // 未提交事务的临时表，仅在当前事务内可见，其他事务无法看到
     private Map<Long, List<Table>> xidTableCache;
     private Lock lock;
 
@@ -97,9 +99,11 @@ public class TableManagerImpl implements TableManager {
         lock.lock();
         try {
             StringBuilder sb = new StringBuilder();
+            // 已提交事务所创建或修改的表
             for (Table tb : tableCache.values()) {
                 sb.append(tb.toString()).append("\n");
             }
+            // 当前事务中创建但未提交的表
             List<Table> t = xidTableCache.get(xid);
             if(t == null) {
                 return "\n".getBytes();

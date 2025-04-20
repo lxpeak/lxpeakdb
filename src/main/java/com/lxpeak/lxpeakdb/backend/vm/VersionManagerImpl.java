@@ -13,6 +13,12 @@ import com.lxpeak.lxpeakdb.backend.common.AbstractCache;
 import com.lxpeak.lxpeakdb.backend.tm.TransactionManager;
 import com.lxpeak.lxpeakdb.backend.tm.TransactionManagerImpl;
 
+/*
+* 注意只有delete方法调用了LockTable的add方法，而insert和read不需要，原因如下：
+* 1、删除操作（delete）需要修改现有数据，设置XMAX。这时候需要防止其他事务同时修改同一条记录，否则会出现竞态条件。因此，必须获取锁来确保独占访问。
+* 2、插入新数据（insert）时通常不需要锁定现有记录，因为新插入的数据在事务提交前对其他事务可能是不可见的。插入的数据在提交前可能只有当前事务可见，所以其他事务不会冲突。
+* 3、读操作（read）依赖版本号判断。事务读取的是快照版本，不会修改数据，因此不需要加锁.
+* */
 public class VersionManagerImpl extends AbstractCache<Entry> implements VersionManager {
 
     TransactionManager tm;
