@@ -1,6 +1,11 @@
 package com.lxpeak.lxpeakdb.backend.im;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.lxpeak.lxpeakdb.backend.dm.DataManager;
@@ -30,7 +35,20 @@ public class BPlusTreeTest {
             assert uids.get(0) == i;
         }
 
-        assert new File("D://lxpeakdb/dbTest/TestTreeSingle.db").delete();
-        assert new File("D://lxpeakdb/dbTest/TestTreeSingle.log").delete();
+        // assert new File("D://lxpeakdb/dbTest/TestTreeSingle.db").delete();
+        // assert new File("D://lxpeakdb/dbTest/TestTreeSingle.log").delete();
+
+        // 没有释放文件,所以这里会提示"另一个程序正在使用此文件，进程无法访问"
+        Path path = Paths.get("D://lxpeakdb/dbTest/TestTreeSingle.db");
+        Path path2 = Paths.get("D://lxpeakdb/dbTest/TestTreeSingle.log");
+        try {
+            Files.delete(path);
+            Files.delete(path2);
+        } catch (NoSuchFileException e) {
+            System.err.println("文件不存在: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("删除失败: " + e.getMessage());
+        }
+
     }
 }
