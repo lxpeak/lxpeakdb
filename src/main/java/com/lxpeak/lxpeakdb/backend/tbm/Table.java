@@ -38,6 +38,7 @@ public class Table {
     long uid;
     String name;
     byte status;
+    // 下一个table的Uid
     long nextUid;
     List<Field> fields = new ArrayList<>();
 
@@ -59,6 +60,7 @@ public class Table {
             String fieldName = create.fieldName[i];
             String fieldType = create.fieldType[i];
             boolean indexed = false;
+            // 是否有需要建立索引的字段
             for(int j = 0; j < create.index.length; j ++) {
                 if(fieldName.equals(create.index[j])) {
                     indexed = true;
@@ -107,6 +109,7 @@ public class Table {
         return this;
     }
 
+    // 把表名、下一个表的Uid、字段的字节数组（由Field类提供）拼接成新的字节数组然后交给VM进行处理
     private Table persistSelf(long xid) throws Exception {
         byte[] nameRaw = Parser.string2Byte(name);
         byte[] nextRaw = Parser.long2Byte(nextUid);
@@ -144,18 +147,25 @@ public class Table {
         Object value = fd.string2Value(update.value);
         int count = 0;
         for (Long uid : uids) {
+            // 1.根据uid找到对应的字段
             byte[] raw = ((TableManagerImpl)tbm).vm.read(xid, uid);
             if(raw == null) continue;
 
+            // 2.删除这个字段的内容
             ((TableManagerImpl)tbm).vm.delete(xid, uid);
 
+            // 解析读取的字节数组
             Map<String, Object> entry = parseEntry(raw);
+            // 把新值放进去
             entry.put(fd.fieldName, value);
+            // 将新的内容变成字节数组
             raw = entry2Raw(entry);
+            // 3.添加这个字段的内容
             long uuid = ((TableManagerImpl)tbm).vm.insert(xid, raw);
 
             count ++;
 
+            // 重新添加索引字段到B+树
             for (Field field : fields) {
                 if(field.isIndexed()) {
                     field.insert(entry.get(field.fieldName), uuid);
@@ -166,6 +176,7 @@ public class Table {
     }
 
     public String read(long xid, Select read) throws Exception {
+        // 处理where条件的查询条件,得到对某字段的查询范围,通过B+树范围查询后得到UID集合
         List<Long> uids = parseWhere(read.where);
         StringBuilder sb = new StringBuilder();
         for (Long uid : uids) {
@@ -180,14 +191,17 @@ public class Table {
     public void insert(long xid, Insert insert) throws Exception {
         Map<String, Object> entry = string2Entry(insert.values);
         byte[] raw = entry2Raw(entry);
+        // 写日志以及执行插入操作
         long uid = ((TableManagerImpl)tbm).vm.insert(xid, raw);
         for (Field field : fields) {
             if(field.isIndexed()) {
+                // 将有索引的字段放进B+树中
                 field.insert(entry.get(field.fieldName), uid);
             }
         }
     }
 
+    // 如果该表有5个字段,则values数组会传5个值,将字段名和字段值依次放进entry中
     private Map<String, Object> string2Entry(String[] values) throws Exception {
         if(values.length != fields.size()) {
             throw Error.InvalidValuesException;
@@ -202,9 +216,11 @@ public class Table {
     }
 
     private List<Long> parseWhere(Where where) throws Exception {
+        // 最多两个判断条件，第一个判断条件的搜索范围[l0,r0], 第二个判断条件的搜索范围[l1,r1]
         long l0=0, r0=0, l1=0, r1=0;
         boolean single = false;
         Field fd = null;
+        // 如果没有WHERE条件，默认选择第一个有索引的字段的全部范围
         if(where == null) {
             for (Field field : fields) {
                 if(field.isIndexed()) {
@@ -215,7 +231,10 @@ public class Table {
             l0 = 0;
             r0 = Long.MAX_VALUE;
             single = true;
-        } else {
+        }
+
+        // 找到 WHERE 条件中涉及的字段（必须是已索引的字段）
+        else {
             for (Field field : fields) {
                 if(field.fieldName.equals(where.singleExp1.field)) {
                     if(!field.isIndexed()) {
@@ -228,11 +247,14 @@ public class Table {
             if(fd == null) {
                 throw Error.FieldNotFoundException;
             }
+            // 计算条件的搜索范围
             CalWhereRes res = calWhere(fd, where);
+            // 第一个判断条件的搜索范围[l0,r0], 第二个判断条件的搜索范围[l1,r1]
             l0 = res.l0; r0 = res.r0;
             l1 = res.l1; r1 = res.r1;
             single = res.single;
         }
+        // 调用 B+ 树查询满足范围的 UID 列表
         List<Long> uids = fd.search(l0, r0);
         if(!single) {
             List<Long> tmp = fd.search(l1, r1);
@@ -249,24 +271,32 @@ public class Table {
     private CalWhereRes calWhere(Field fd, Where where) throws Exception {
         CalWhereRes res = new CalWhereRes();
         switch(where.logicOp) {
+            // 单条件（如 age > 25）
             case "":
                 res.single = true;
                 FieldCalRes r = fd.calExp(where.singleExp1);
+                // 第一个条件的搜索范围[l0,r0]
                 res.l0 = r.left; res.r0 = r.right;
                 break;
+
+            // OR 条件（如 age < 20 OR age > 30）
             case "or":
+                // 第一个条件的搜索范围[l0,r0], 第二个条件的搜索范围[l1,r1]
                 res.single = false;
                 r = fd.calExp(where.singleExp1);
                 res.l0 = r.left; res.r0 = r.right;
                 r = fd.calExp(where.singleExp2);
                 res.l1 = r.left; res.r1 = r.right;
                 break;
+
+            // AND 条件（如 age > 20 AND age < 30）
             case "and":
                 res.single = true;
                 r = fd.calExp(where.singleExp1);
                 res.l0 = r.left; res.r0 = r.right;
                 r = fd.calExp(where.singleExp2);
                 res.l1 = r.left; res.r1 = r.right;
+                // 取交集
                 if(res.l1 > res.l0) res.l0 = res.l1;
                 if(res.r1 < res.r0) res.r0 = res.r1;
                 break;

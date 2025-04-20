@@ -66,9 +66,18 @@ public class Parser {
         return Bytes.concat(l, str.getBytes());
     }
 
+    /*
+    * 输入：字符串 key（如 "Alice"）
+    * 输出：哈希值为 long 类型（如 123456789）
+    * -----------------------------------------------
+    * Q：为什么用这个？
+    * A：B+树实现要求键（Key）是数值类型，因为数值可以直接比较大小，而字符串需要逐字符比较。将字符串转换为数值后，可以直接利用 B+ 树的高效数值范围查询能力。
+    */
     public static long str2Uid(String key) {
+        // 质数
         long seed = 13331;
         long res = 0;
+        // 简单的多项式滚动哈希函数
         for(byte b : key.getBytes()) {
             res = res * seed + (long)b;
         }

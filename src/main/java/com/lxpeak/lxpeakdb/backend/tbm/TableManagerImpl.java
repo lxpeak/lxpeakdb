@@ -122,6 +122,7 @@ public class TableManagerImpl implements TableManager {
             Table table = Table.createTable(this, firstTableUid(), xid, create);
             updateFirstTableUid(table.uid);
             tableCache.put(create.tableName, table);
+            // xidTableCache记录事务正在处理的table
             if(!xidTableCache.containsKey(xid)) {
                 xidTableCache.put(xid, new ArrayList<>());
             }

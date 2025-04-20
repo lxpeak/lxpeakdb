@@ -124,6 +124,7 @@ public class Field {
         return bt.searchRange(left, right);
     }
 
+    // 将字符串转换为数字
     public Object string2Value(String str) {
         switch(fieldType) {
             case "int32":
@@ -136,6 +137,7 @@ public class Field {
         return null;
     }
 
+    // 得到用于进行B+树查询的uid，数字的话因为直接可以比较所以不用处理，字符串通过哈希函数映射后得到uid进行比较
     public long value2Uid(Object key) {
         long uid = 0;
         switch(fieldType) {
@@ -173,6 +175,7 @@ public class Field {
         int shift;
     }
 
+    // 将字节数组解析成对应的数字或字符串
     public ParseValueRes parserValue(byte[] raw) {
         ParseValueRes res = new ParseValueRes();
         switch(fieldType) {
@@ -220,10 +223,12 @@ public class Field {
             .toString();
     }
 
+    // 得到判断条件的搜索范围
     public FieldCalRes calExp(SingleExpression exp) throws Exception {
         Object v = null;
         FieldCalRes res = new FieldCalRes();
         switch(exp.compareOp) {
+            // 例如 age < 25 -> [0, 24]
             case "<":
                 res.left = 0;
                 v = string2Value(exp.value);
@@ -232,11 +237,13 @@ public class Field {
                     res.right --;
                 }
                 break;
+            // 例如 age = 25 -> [25, 25]
             case "=":
                 v = string2Value(exp.value);
                 res.left = value2Uid(v);
                 res.right = res.left;
                 break;
+            // 例如 age > 25 -> [26, Long.MAX_VALUE]
             case ">":
                 res.right = Long.MAX_VALUE;
                 v = string2Value(exp.value);
